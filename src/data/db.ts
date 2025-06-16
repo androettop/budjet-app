@@ -33,11 +33,19 @@ type FirestoreDoc = {
 };
 
 export class EncryptedDB {
-  private static instance: EncryptedDB;
+  private static instance: EncryptedDB | null = null;
   private static db: Firestore = fbDb;
   private key: CryptoKey | null = null;
 
   private constructor() {}
+
+  /**
+   * Check if the database is locked.
+   * @returns True if the database is locked, false otherwise.
+   */
+  static isLocked(): boolean {
+    return !EncryptedDB.instance?.key;
+  }
 
   /**
    * Be careful when using this method, as it will overwrite the master password and generate a new salt and OK check.
@@ -71,12 +79,12 @@ export class EncryptedDB {
     uid: string,
     askForMasterPassword: () => Promise<string>,
   ): Promise<void> {
-    if (!EncryptedDB.instance) {
-      EncryptedDB.instance = new EncryptedDB();
-    }
+    const encryptedDB: EncryptedDB = EncryptedDB.instance || new EncryptedDB();
 
-    const encryptedDB = EncryptedDB.instance;
-    if (encryptedDB.key) return;
+    if (encryptedDB.key) {
+      console.log("Database already unlocked");
+      return;
+    }
 
     const authCheckRef = doc(EncryptedDB.db, "authChecks", uid);
     const snap = await getDoc(authCheckRef);
@@ -98,6 +106,18 @@ export class EncryptedDB {
       throw new CodedError(errorCodes.INVALID_MASTER_PASSWORD);
 
     encryptedDB.key = key;
+    EncryptedDB.instance = encryptedDB;
+  }
+
+  /**
+   * Lock the database.
+   */
+  static lock() {
+    if (!EncryptedDB.instance || !EncryptedDB.instance.key) {
+      console.warn("Database is already locked");
+    } else {
+      EncryptedDB.instance = null;
+    }
   }
 
   static getInstance(): EncryptedDB {

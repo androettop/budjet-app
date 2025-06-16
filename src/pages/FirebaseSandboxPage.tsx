@@ -2,6 +2,7 @@ import { signInWithPopup } from "firebase/auth";
 import { fbAuth, googleProvider } from "../helpers/firebase";
 import { EncryptedDB } from "../data/db";
 import { errorCodes, type CodedError } from "../helpers/errors";
+import { useUserData } from "../hooks/useUserData";
 
 const FirebaseSandboxPage = () => {
   const handleLogin = async () => {
@@ -60,10 +61,11 @@ const FirebaseSandboxPage = () => {
     window.alert(JSON.stringify(sampleData, null, 2));
   };
 
+  const user = useUserData();
+
   return (
     <div>
-      Firebase Sandbox Page user name:{" "}
-      {fbAuth.currentUser?.displayName || "anonymous"}
+      Firebase Sandbox Page user name: {user?.displayName || "anonymous"}
       <button onClick={handleLogin}>login</button>
       <button onClick={handleLogout}>logout</button>
       <button onClick={saveSampleData}>save sample data</button>
