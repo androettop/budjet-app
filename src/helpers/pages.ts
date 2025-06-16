@@ -1,11 +1,13 @@
 import {
+  CopyAll,
   Home as HomeIcon,
   Login as LoginIcon,
   Palette as PaletteIcon,
 } from "@mui/icons-material";
+import DialogSandboxPage from "../pages/DialogSandboxPage";
+import FirebaseSandboxPage from "../pages/FirebaseSandboxPage";
 import HomePage from "../pages/HomePage";
 import ThemeSandboxPage from "../pages/ThemeSandboxPage";
-import FirebaseSandboxPage from "../pages/FirebaseSandboxPage";
 import type { Page } from "../types/pages";
 
 export const pages: Page[] = [
@@ -26,5 +28,11 @@ export const pages: Page[] = [
     Component: FirebaseSandboxPage,
     title: "Firebase sandbox",
     Icon: LoginIcon,
+  },
+  {
+    path: "/dialog",
+    Component: DialogSandboxPage,
+    title: "Dialog sandbox",
+    Icon: CopyAll,
   },
 ];
