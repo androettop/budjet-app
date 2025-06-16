@@ -6,12 +6,23 @@ import useStaticHandler from "./useStaticHandler";
 
 export const useAuthChange = () => {
   const [userState, setUserState] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const handleUpdateUser = useStaticHandler((newUser: User | null) => {
-    if (!EncryptedDB.isLocked() && userState?.uid !== newUser?.uid) {
+  const handleUpdateUser = useStaticHandler(async (newUser: User | null) => {
+    if (
+      !EncryptedDB.isLocked() &&
+      (userState?.uid !== newUser?.uid || !newUser?.uid) &&
+      !isLoading
+    ) {
       EncryptedDB.lock();
     }
+
+    if (newUser?.uid) {
+      await EncryptedDB.unlockFromSession(newUser?.uid);
+    }
+
     setUserState(newUser);
+    setIsLoading(false);
   });
 
   useEffect(() => {
@@ -22,5 +33,5 @@ export const useAuthChange = () => {
     return () => unsubscribe();
   }, [handleUpdateUser]);
 
-  return userState;
+  return { user: userState, isLoading };
 };

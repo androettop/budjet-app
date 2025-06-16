@@ -20,7 +20,7 @@ import useDbLock from "../hooks/useDbLock";
 
 const HomePage = () => {
   const [movementData, setMovementData] = useState<Movement>({
-    date: new Date().toISOString(),
+    date: new Date().toISOString().substring(0, 10),
     amount: 0,
     category: "",
     expense: true,
@@ -35,15 +35,15 @@ const HomePage = () => {
 
   const handleSave = () => {
     EncryptedDB.getInstance().addDoc(
-      movementData,
       `/users/${user?.uid}/movements`,
+      movementData,
     );
   };
 
   useEffect(() => {
     if (user && !isDbLocked) {
       EncryptedDB.getInstance()
-        .getDocs([], `/users/${user?.uid}/movements`)
+        .getDocs(`/users/${user?.uid}/movements`)
         .then((docs) => {
           setMovements(docs.map((doc) => doc.data as Movement));
         });
@@ -58,81 +58,85 @@ const HomePage = () => {
         <Grid size={6}>
           <Card>
             <CardContent>
-              <Typography align="center" variant="h5" gutterBottom>
-                Cargar Gasto/Ingreso
-              </Typography>
-              <ToggleButtonGroup
-                color="primary"
-                sx={{ width: "100%" }}
-                value={movementData.expense}
-                exclusive
-                onChange={(_event, value) =>
-                  setMovementData({ ...movementData, expense: value })
-                }
-                aria-label="Tipo de movimiento"
-              >
-                <ToggleButton sx={{ flex: 1 }} value={true}>
-                  Gasto
-                </ToggleButton>
-                <ToggleButton sx={{ flex: 1 }} value={false}>
-                  Ingreso
-                </ToggleButton>
-              </ToggleButtonGroup>
-              <TextField
-                label="Monto"
-                type="number"
-                value={movementData.amount}
-                onChange={(event) =>
-                  setMovementData({
-                    ...movementData,
-                    amount: Number(event.target.value),
-                  })
-                }
-                fullWidth
-                required
-              />
-              <TextField
-                label="Descripción"
-                value={movementData.description}
-                onChange={(event) =>
-                  setMovementData({
-                    ...movementData,
-                    description: event.target.value,
-                  })
-                }
-                fullWidth
-                required
-              />
-              <TextField
-                label="Fecha"
-                type="date"
-                value={movementData.date}
-                onChange={(event) =>
-                  setMovementData({ ...movementData, date: event.target.value })
-                }
-                fullWidth
-                required
-              />
-              <TextField
-                label="Categoría"
-                value={movementData.category}
-                onChange={(event) =>
-                  setMovementData({
-                    ...movementData,
-                    category: event.target.value,
-                  })
-                }
-                fullWidth
-                required
-              />
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={handleSave}
-                fullWidth
-              >
-                Guardar
-              </Button>
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                <Typography variant="h5">Cargar Gasto/Ingreso</Typography>
+                <ToggleButtonGroup
+                  color="primary"
+                  sx={{ width: "100%" }}
+                  value={movementData.expense}
+                  exclusive
+                  onChange={(_event, value) => {
+                    if (value === null) return;
+                    setMovementData({ ...movementData, expense: value });
+                  }}
+                  aria-label="Tipo de movimiento"
+                >
+                  <ToggleButton sx={{ flex: 1 }} value={true}>
+                    Gasto
+                  </ToggleButton>
+                  <ToggleButton sx={{ flex: 1 }} value={false}>
+                    Ingreso
+                  </ToggleButton>
+                </ToggleButtonGroup>
+                <TextField
+                  label="Monto"
+                  type="number"
+                  value={movementData.amount}
+                  onChange={(event) =>
+                    setMovementData({
+                      ...movementData,
+                      amount: Number(event.target.value),
+                    })
+                  }
+                  fullWidth
+                  required
+                />
+                <TextField
+                  label="Descripción"
+                  value={movementData.description}
+                  onChange={(event) =>
+                    setMovementData({
+                      ...movementData,
+                      description: event.target.value,
+                    })
+                  }
+                  fullWidth
+                  required
+                />
+                <TextField
+                  label="Fecha"
+                  type="date"
+                  value={movementData.date}
+                  onChange={(event) =>
+                    setMovementData({
+                      ...movementData,
+                      date: event.target.value,
+                    })
+                  }
+                  fullWidth
+                  required
+                />
+                <TextField
+                  label="Categoría"
+                  value={movementData.category}
+                  onChange={(event) =>
+                    setMovementData({
+                      ...movementData,
+                      category: event.target.value,
+                    })
+                  }
+                  fullWidth
+                  required
+                />
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={handleSave}
+                  fullWidth
+                >
+                  Guardar
+                </Button>
+              </Box>
             </CardContent>
           </Card>
         </Grid>

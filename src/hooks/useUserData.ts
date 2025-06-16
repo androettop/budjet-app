@@ -5,10 +5,18 @@
 import type { User } from "firebase/auth";
 import { createContext, useContext } from "react";
 
-export const UserContext = createContext<User | null>(null);
+type UserContextType = {
+  user: User | null;
+  isLoading: boolean;
+};
+
+export const UserContext = createContext<UserContextType>({
+  user: null,
+  isLoading: true,
+});
 export const UserProvider = UserContext.Provider;
 
 export const useUserData = () => {
-  const user = useContext(UserContext);
-  return user;
+  const data = useContext(UserContext);
+  return data.user;
 };

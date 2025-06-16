@@ -3,6 +3,7 @@ import {
   Avatar,
   Box,
   Button,
+  CircularProgress,
   Container,
   Drawer,
   Grid,
@@ -29,10 +30,12 @@ import { useNavigate } from "react-router";
 import { useUserData } from "../../hooks/useUserData";
 import { logout, login } from "../../helpers/login";
 import useDbLock from "../../hooks/useDbLock";
+import { useAuthLoading } from "../../hooks/useAuthLoading";
 
 const Layout = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { isDbLocked, lockDb, unlockDb } = useDbLock();
+  const isAuthLoading = useAuthLoading();
   const navigate = useNavigate();
   const user = useUserData();
 
@@ -47,6 +50,40 @@ const Layout = () => {
 
   const handleLogin = () => {
     login();
+  };
+
+  const righPartRender = () => {
+    if (isAuthLoading) {
+      return <CircularProgress />;
+    } else if (user) {
+      return (
+        <Grid container spacing={2} alignItems="center">
+          <Grid>
+            <Tooltip title={isDbLocked ? "Unlock Database" : "Lock Database"}>
+              <Button
+                color="inherit"
+                onClick={isDbLocked ? unlockDb : lockDb}
+                startIcon={!isDbLocked ? <LockOpenIcon /> : <LockIcon />}
+              >
+                {isDbLocked ? "Unlock DB" : "Lock DB"}
+              </Button>
+            </Tooltip>
+          </Grid>
+          <Grid>
+            <Tooltip title="Log out">
+              <IconButton onClick={() => handleLogout()}>
+                <LogoutIcon />
+              </IconButton>
+            </Tooltip>
+          </Grid>
+          <Grid>
+            <Avatar src={user.photoURL || undefined} />
+          </Grid>
+        </Grid>
+      );
+    } else {
+      return <Button onClick={() => handleLogin()}>Log in</Button>;
+    }
   };
 
   return (
@@ -65,35 +102,7 @@ const Layout = () => {
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             BudJet
           </Typography>
-          {user ? (
-            <Grid container spacing={2} alignItems="center">
-              <Grid>
-                <Tooltip
-                  title={isDbLocked ? "Unlock Database" : "Lock Database"}
-                >
-                  <Button
-                    color="inherit"
-                    onClick={isDbLocked ? unlockDb : lockDb}
-                    startIcon={!isDbLocked ? <LockOpenIcon /> : <LockIcon />}
-                  >
-                    {isDbLocked ? "Unlock DB" : "Lock DB"}
-                  </Button>
-                </Tooltip>
-              </Grid>
-              <Grid>
-                <Tooltip title="Log out">
-                  <IconButton onClick={() => handleLogout()}>
-                    <LogoutIcon />
-                  </IconButton>
-                </Tooltip>
-              </Grid>
-              <Grid>
-                <Avatar src={user.photoURL || undefined} />
-              </Grid>
-            </Grid>
-          ) : (
-            <Button onClick={() => handleLogin()}>Log in</Button>
-          )}
+          {righPartRender()}
         </Toolbar>
       </AppBar>
       {/* Drawer */}

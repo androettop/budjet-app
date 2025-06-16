@@ -49,10 +49,10 @@ const FirebaseSandboxPage = () => {
 
   const saveSampleData = async () => {
     await EncryptedDB.getInstance().setDoc(
+      "/users/" + user?.uid + "/movements/sample",
       {
         text: "Sample text",
       },
-      "/users/" + user?.uid + "/movements/sample",
     );
   };
 

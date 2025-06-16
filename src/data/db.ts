@@ -70,6 +70,59 @@ export class EncryptedDB {
     });
   }
 
+  async saveKeyInSessionStorage() {
+    debugger;
+    if (this.key) {
+      const exportedKey = await crypto.subtle.exportKey("jwk", this.key);
+      sessionStorage.setItem("encryptedDBKey", JSON.stringify(exportedKey));
+    } else {
+      throw new Error("Key not initialized");
+    }
+  }
+
+  static async unlockFromSession(uid: string) {
+    if (!EncryptedDB.isLocked()) {
+      console.log("Database already unlocked");
+      return;
+    }
+
+    const encryptedKey = sessionStorage.getItem("encryptedDBKey");
+    if (!encryptedKey) {
+      console.log("Key not found");
+      return;
+    }
+
+    const encryptedDB: EncryptedDB = EncryptedDB.instance || new EncryptedDB();
+
+    const importedKey = await crypto.subtle.importKey(
+      "jwk",
+      JSON.parse(encryptedKey),
+      { name: "AES-GCM", length: 256 },
+      true,
+      ["encrypt", "decrypt"],
+    );
+
+    const authCheckRef = doc(EncryptedDB.db, "authChecks", uid);
+    const snap = await getDoc(authCheckRef);
+    if (!snap.exists())
+      throw new CodedError(errorCodes.AUTH_INFO_NOT_INITIALIZED);
+
+    const { salt, authCheck } = snap.data();
+    if (!salt || !authCheck)
+      throw new CodedError(errorCodes.AUTH_INFO_NOT_INITIALIZED);
+
+    const check = await decryptData(
+      authCheck.ciphertext,
+      authCheck.iv,
+      importedKey,
+    ).catch(() => null);
+    if (check !== "OK")
+      throw new CodedError(errorCodes.INVALID_MASTER_PASSWORD);
+
+    encryptedDB.key = importedKey;
+    EncryptedDB.instance = encryptedDB;
+  }
+
   /**
    * Unlock the encrypted database using the master password.
    * @param uid The user ID.
@@ -82,7 +135,7 @@ export class EncryptedDB {
   ): Promise<void> {
     const encryptedDB: EncryptedDB = EncryptedDB.instance || new EncryptedDB();
 
-    if (encryptedDB.key) {
+    if (!EncryptedDB.isLocked()) {
       console.log("Database already unlocked");
       return;
     }
@@ -107,6 +160,7 @@ export class EncryptedDB {
       throw new CodedError(errorCodes.INVALID_MASTER_PASSWORD);
 
     encryptedDB.key = key;
+    encryptedDB.saveKeyInSessionStorage();
     EncryptedDB.instance = encryptedDB;
   }
 
@@ -130,9 +184,8 @@ export class EncryptedDB {
 
   async getDoc(
     path: string,
-    ...pathSegments: string[]
   ): Promise<{ data: SerializableObject; metadata: Metadata }> {
-    const ref = doc(EncryptedDB.db, path, ...pathSegments);
+    const ref = doc(EncryptedDB.db, path);
     const snap = await getDoc(ref);
     if (!snap.exists()) throw new CodedError(errorCodes.DOC_NOT_FOUND);
 
@@ -145,12 +198,8 @@ export class EncryptedDB {
     return { data, metadata };
   }
 
-  async setDoc(
-    data: SerializableObject,
-    path: string,
-    ...pathSegments: string[]
-  ): Promise<void> {
-    const ref = doc(EncryptedDB.db, path, ...pathSegments);
+  async setDoc(path: string, data: SerializableObject): Promise<void> {
+    const ref = doc(EncryptedDB.db, path);
     const { iv, ciphertext } = await encryptData(data, this.key!);
     const payload: FirestoreDoc = {
       iv,
@@ -163,12 +212,8 @@ export class EncryptedDB {
     await setDoc(ref, payload);
   }
 
-  async addDoc(
-    data: SerializableObject,
-    path: string,
-    ...pathSegments: string[]
-  ): Promise<void> {
-    const ref = collection(EncryptedDB.db, path, ...pathSegments);
+  async addDoc(path: string, data: SerializableObject): Promise<void> {
+    const ref = collection(EncryptedDB.db, path);
     const { iv, ciphertext } = await encryptData(data, this.key!);
     const payload: FirestoreDoc = {
       iv,
@@ -181,13 +226,9 @@ export class EncryptedDB {
     await addDoc(ref, payload);
   }
 
-  async updateDoc(
-    newData: SerializableObject,
-    path: string,
-    ...pathSegments: string[]
-  ): Promise<void> {
-    const ref = doc(EncryptedDB.db, path, ...pathSegments);
-    const { data: currentData } = await this.getDoc(path, ...pathSegments);
+  async updateDoc(path: string, newData: SerializableObject): Promise<void> {
+    const ref = doc(EncryptedDB.db, path);
+    const { data: currentData } = await this.getDoc(path);
     const updatedData: SerializableObject = { ...currentData, ...newData };
     const { iv, ciphertext } = await encryptData(updatedData, this.key!);
     await updateDoc(ref, {
@@ -198,11 +239,10 @@ export class EncryptedDB {
   }
 
   async getDocs(
-    filters: QueryConstraint[],
     path: string,
-    ...pathSegments: string[]
+    filters: QueryConstraint[] = [],
   ): Promise<{ data: SerializableObject; metadata: Metadata; id: string }[]> {
-    const colRef = collection(EncryptedDB.db, path, ...pathSegments);
+    const colRef = collection(EncryptedDB.db, path);
     const q = query(colRef, ...filters);
     const snapshot = await getDocs(q);
     const results = await Promise.all(
