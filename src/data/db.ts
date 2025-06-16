@@ -55,7 +55,7 @@ export class EncryptedDB {
 
     const { iv: ivB64, ciphertext } = await encryptData("OK", newKey);
 
-    await updateDoc(doc(db, "users", uid), {
+    await setDoc(doc(db, "authChecks", uid), {
       salt: salt.base64,
       authCheck: {
         iv: ivB64,
@@ -76,9 +76,9 @@ export class EncryptedDB {
     const encryptedDB = EncryptedDB.instance;
     if (encryptedDB.key) return encryptedDB;
 
-    const userDocRef = doc(db, "users", uid);
-    const snap = await getDoc(userDocRef);
-    if (!snap.exists()) throw new Error("User profile not found");
+    const authCheckRef = doc(db, "authChecks", uid);
+    const snap = await getDoc(authCheckRef);
+    if (!snap.exists()) throw new Error("Auth check information not found");
 
     const { salt, authCheck } = snap.data();
     if (!salt || !authCheck) throw new Error("Missing encryption metadata");
@@ -154,10 +154,11 @@ export class EncryptedDB {
   }
 
   async getDocs(
-    collectionName: string,
-    ...filters: QueryConstraint[]
+    filters: QueryConstraint[],
+    path: string,
+    ...pathSegments: string[]
   ): Promise<{ data: SerializableObject; metadata: Metadata; id: string }[]> {
-    const colRef = collection(this.db, "users", this.uid, collectionName);
+    const colRef = collection(this.db, path, ...pathSegments);
     const q = query(colRef, ...filters);
     const snapshot = await getDocs(q);
     const results = await Promise.all(
