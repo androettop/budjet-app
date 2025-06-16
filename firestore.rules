@@ -3,8 +3,67 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // ----------- FUNCTIONS -----------
+    function getUserId() {
+        return request.auth.uid;
+    }
+
+    function isLoggedIn() {
+        return request.auth.uid != null;
+    }
+
+    function hasFields(fields) {
+        return request.resource.data.keys().hasOnly(fields);
+    }
+
+    // -------- AUTH CHECKS VALIDATIONS --------
+
+    function getAllowedAuthChecksFields() {
+        return ['authCheck', 'salt'];
+    }
+
+    function isAuthCheckValid() {
+        return hasFields(getAllowedAuthChecksFields())
+    }
+
+    function canWriteAuthCheck(userId) {
+        return isLoggedIn() && isAuthCheckValid() && userId == getUserId();
+    }
+
+    function canReadAuthCheck(userId) {
+        return isLoggedIn() && userId == getUserId();
+    }
+
+    match /authChecks/{userId} {
+      allow write: if canWriteAuthCheck(userId);
+      allow read: if canReadAuthCheck(userId);
+    }
+
+    // -------- MOVEMENTS VALIDATIONS --------
+    function getAllowedMovementsFields() {
+        return ['ciphertext', 'iv', 'metadata'];
+    }
+
+    function isMovementValid() {
+        return hasFields(getAllowedMovementsFields())
+    }
+
+    function canWriteMovement(userId) {
+        return isLoggedIn() && isMovementValid() && userId == getUserId();
+    }
+
+    function canReadMovement(userId) {
+        return isLoggedIn() && userId == getUserId();
+    }
+
+    match /users/{userId}/movements/{movementId} {
+      allow write: if canWriteMovement(userId);
+      allow read: if canReadMovement(userId);
+    }
+
+    // -------- OTHER DOCUMENTS VALIDATIONS --------
     match /{document=**} {
-      allow read, write: if true;
+      allow read, write: if false;
     }
   }
 }

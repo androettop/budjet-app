@@ -68,15 +68,16 @@ const Layout = () => {
           {user ? (
             <Grid container spacing={2} alignItems="center">
               <Grid>
-                <Avatar src={user.photoURL || undefined} />
-              </Grid>
-              <Grid>
                 <Tooltip
                   title={isDbLocked ? "Unlock Database" : "Lock Database"}
                 >
-                  <IconButton onClick={isDbLocked ? unlockDb : lockDb}>
-                    {!isDbLocked ? <LockOpenIcon /> : <LockIcon />}
-                  </IconButton>
+                  <Button
+                    color="inherit"
+                    onClick={isDbLocked ? unlockDb : lockDb}
+                    startIcon={!isDbLocked ? <LockOpenIcon /> : <LockIcon />}
+                  >
+                    {isDbLocked ? "Unlock DB" : "Lock DB"}
+                  </Button>
                 </Tooltip>
               </Grid>
               <Grid>
@@ -85,6 +86,9 @@ const Layout = () => {
                     <LogoutIcon />
                   </IconButton>
                 </Tooltip>
+              </Grid>
+              <Grid>
+                <Avatar src={user.photoURL || undefined} />
               </Grid>
             </Grid>
           ) : (

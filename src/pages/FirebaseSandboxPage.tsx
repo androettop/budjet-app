@@ -52,12 +52,14 @@ const FirebaseSandboxPage = () => {
       {
         text: "Sample text",
       },
-      "/samples/123",
+      "/users/" + user?.uid + "/movements/sample",
     );
   };
 
   const loadSampleData = async () => {
-    const sampleData = await EncryptedDB.getInstance().getDoc("/samples/123");
+    const sampleData = await EncryptedDB.getInstance().getDoc(
+      "/users/" + user?.uid + "/movements/sample",
+    );
     window.alert(JSON.stringify(sampleData, null, 2));
   };
 
