@@ -3,9 +3,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { createTheme, ThemeProvider } from "@mui/material";
 import CssBaseline from "@mui/material/CssBaseline";
-import SandboxPage from "./pages/SandboxPage";
 import Layout from "./components/Layout/Layout";
-import HomePage from "./pages/HomePage";
 import { pages } from "./helpers/pages";
 
 const theme = createTheme({

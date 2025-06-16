@@ -19,6 +19,7 @@ import {
 } from "../helpers/crypto";
 import type { SerializableObject } from "../types/data";
 import { CodedError, errorCodes } from "../helpers/errors";
+import { fbDb } from "../helpers/firebase";
 
 type Metadata = {
   createdAt: Timestamp;
@@ -33,21 +34,16 @@ type FirestoreDoc = {
 
 export class EncryptedDB {
   private static instance: EncryptedDB;
-  private db: Firestore;
-  private uid: string;
+  private static db: Firestore = fbDb;
   private key: CryptoKey | null = null;
 
-  private constructor(db: Firestore, uid: string) {
-    this.db = db;
-    this.uid = uid;
-  }
+  private constructor() {}
 
   /**
    * Be careful when using this method, as it will overwrite the master password and generate a new salt and OK check.
    * Existing encrypted data will become undecryptable.
    */
   static async newMasterPassword(
-    db: Firestore,
     uid: string,
     newPassword: string,
   ): Promise<void> {
@@ -56,7 +52,7 @@ export class EncryptedDB {
 
     const { iv: ivB64, ciphertext } = await encryptData("OK", newKey);
 
-    await setDoc(doc(db, "authChecks", uid), {
+    await setDoc(doc(EncryptedDB.db, "authChecks", uid), {
       salt: salt.base64,
       authCheck: {
         iv: ivB64,
@@ -65,19 +61,24 @@ export class EncryptedDB {
     });
   }
 
+  /**
+   * Unlock the encrypted database using the master password.
+   * @param uid The user ID.
+   * @param askForMasterPassword A function that prompts the user for the master password.
+   * @throws {CodedError} If the master password is incorrect. Possible error codes: AUTH_INFO_NOT_INITIALIZED, INVALID_MASTER_PASSWORD.
+   */
   static async unlock(
-    db: Firestore,
     uid: string,
-    masterPassword: string,
-  ): Promise<EncryptedDB> {
+    askForMasterPassword: () => Promise<string>,
+  ): Promise<void> {
     if (!EncryptedDB.instance) {
-      EncryptedDB.instance = new EncryptedDB(db, uid);
+      EncryptedDB.instance = new EncryptedDB();
     }
 
     const encryptedDB = EncryptedDB.instance;
-    if (encryptedDB.key) return encryptedDB;
+    if (encryptedDB.key) return;
 
-    const authCheckRef = doc(db, "authChecks", uid);
+    const authCheckRef = doc(EncryptedDB.db, "authChecks", uid);
     const snap = await getDoc(authCheckRef);
     if (!snap.exists())
       throw new CodedError(errorCodes.AUTH_INFO_NOT_INITIALIZED);
@@ -86,6 +87,7 @@ export class EncryptedDB {
     if (!salt || !authCheck)
       throw new CodedError(errorCodes.AUTH_INFO_NOT_INITIALIZED);
 
+    const masterPassword = await askForMasterPassword();
     const key = await deriveKey(masterPassword, b64decode(salt));
     const check = await decryptData(
       authCheck.ciphertext,
@@ -96,7 +98,6 @@ export class EncryptedDB {
       throw new CodedError(errorCodes.INVALID_MASTER_PASSWORD);
 
     encryptedDB.key = key;
-    return encryptedDB;
   }
 
   static getInstance(): EncryptedDB {
@@ -110,7 +111,7 @@ export class EncryptedDB {
     path: string,
     ...pathSegments: string[]
   ): Promise<{ data: SerializableObject; metadata: Metadata }> {
-    const ref = doc(this.db, path, ...pathSegments);
+    const ref = doc(EncryptedDB.db, path, ...pathSegments);
     const snap = await getDoc(ref);
     if (!snap.exists()) throw new CodedError(errorCodes.DOC_NOT_FOUND);
 
@@ -128,7 +129,7 @@ export class EncryptedDB {
     path: string,
     ...pathSegments: string[]
   ): Promise<void> {
-    const ref = doc(this.db, path, ...pathSegments);
+    const ref = doc(EncryptedDB.db, path, ...pathSegments);
     const { iv, ciphertext } = await encryptData(data, this.key!);
     const payload: FirestoreDoc = {
       iv,
@@ -146,7 +147,7 @@ export class EncryptedDB {
     path: string,
     ...pathSegments: string[]
   ): Promise<void> {
-    const ref = doc(this.db, path, ...pathSegments);
+    const ref = doc(EncryptedDB.db, path, ...pathSegments);
     const { data: currentData } = await this.getDoc(path, ...pathSegments);
     const updatedData: SerializableObject = { ...currentData, ...newData };
     const { iv, ciphertext } = await encryptData(updatedData, this.key!);
@@ -162,7 +163,7 @@ export class EncryptedDB {
     path: string,
     ...pathSegments: string[]
   ): Promise<{ data: SerializableObject; metadata: Metadata; id: string }[]> {
-    const colRef = collection(this.db, path, ...pathSegments);
+    const colRef = collection(EncryptedDB.db, path, ...pathSegments);
     const q = query(colRef, ...filters);
     const snapshot = await getDocs(q);
     const results = await Promise.all(

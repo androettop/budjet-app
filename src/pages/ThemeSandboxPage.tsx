@@ -94,7 +94,7 @@ function CustomTabPanel(props: TabPanelProps) {
   );
 }
 
-const SandboxPage = () => {
+const ThemeSandboxPage = () => {
   const [sliderValue, setSliderValue] = useState(30);
   const [rating, setRating] = useState<number | null>(4);
   const [switchChecked, setSwitchChecked] = useState(false);
@@ -729,4 +729,4 @@ const SandboxPage = () => {
   );
 };
 
-export default SandboxPage;
+export default ThemeSandboxPage;
