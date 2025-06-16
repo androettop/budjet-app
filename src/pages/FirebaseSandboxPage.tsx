@@ -46,12 +46,28 @@ const FirebaseSandboxPage = () => {
     fbAuth.signOut();
   };
 
+  const saveSampleData = async () => {
+    await EncryptedDB.getInstance().setDoc(
+      {
+        text: "Sample text",
+      },
+      "/samples/123",
+    );
+  };
+
+  const loadSampleData = async () => {
+    const sampleData = await EncryptedDB.getInstance().getDoc("/samples/123");
+    window.alert(JSON.stringify(sampleData, null, 2));
+  };
+
   return (
     <div>
       Firebase Sandbox Page user name:{" "}
       {fbAuth.currentUser?.displayName || "anonymous"}
       <button onClick={handleLogin}>login</button>
       <button onClick={handleLogout}>logout</button>
+      <button onClick={saveSampleData}>save sample data</button>
+      <button onClick={loadSampleData}>load sample data</button>
     </div>
   );
 };
