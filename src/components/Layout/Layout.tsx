@@ -13,18 +13,26 @@ import {
   ListItemIcon,
   ListItemText,
   Toolbar,
+  Tooltip,
   Typography,
 } from "@mui/material";
-import { Logout as LogoutIcon, Menu as MenuIcon } from "@mui/icons-material";
+import {
+  Lock as LockIcon,
+  LockOpen as LockOpenIcon,
+  Logout as LogoutIcon,
+  Menu as MenuIcon,
+} from "@mui/icons-material";
 import { useState } from "react";
 import { Outlet } from "react-router";
 import { pages } from "../../helpers/pages";
 import { useNavigate } from "react-router";
 import { useUserData } from "../../hooks/useUserData";
 import { logout, login } from "../../helpers/login";
+import useDbLock from "../../hooks/useDbLock";
 
 const Layout = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const { isDbLocked, lockDb, unlockDb } = useDbLock();
   const navigate = useNavigate();
   const user = useUserData();
 
@@ -62,17 +70,25 @@ const Layout = () => {
               <Grid>
                 <Avatar src={user.photoURL || undefined} />
               </Grid>
-
               <Grid>
-                <IconButton color="inherit" onClick={() => handleLogout()}>
-                  <LogoutIcon />
-                </IconButton>
+                <Tooltip
+                  title={isDbLocked ? "Unlock Database" : "Lock Database"}
+                >
+                  <IconButton onClick={isDbLocked ? unlockDb : lockDb}>
+                    {!isDbLocked ? <LockOpenIcon /> : <LockIcon />}
+                  </IconButton>
+                </Tooltip>
+              </Grid>
+              <Grid>
+                <Tooltip title="Log out">
+                  <IconButton onClick={() => handleLogout()}>
+                    <LogoutIcon />
+                  </IconButton>
+                </Tooltip>
               </Grid>
             </Grid>
           ) : (
-            <Button color="inherit" onClick={() => handleLogin()}>
-              Login
-            </Button>
+            <Button onClick={() => handleLogin()}>Log in</Button>
           )}
         </Toolbar>
       </AppBar>
