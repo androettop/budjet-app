@@ -1,4 +1,5 @@
 import {
+  addDoc,
   collection,
   doc,
   Firestore,
@@ -160,6 +161,24 @@ export class EncryptedDB {
       },
     };
     await setDoc(ref, payload);
+  }
+
+  async addDoc(
+    data: SerializableObject,
+    path: string,
+    ...pathSegments: string[]
+  ): Promise<void> {
+    const ref = collection(EncryptedDB.db, path, ...pathSegments);
+    const { iv, ciphertext } = await encryptData(data, this.key!);
+    const payload: FirestoreDoc = {
+      iv,
+      ciphertext,
+      metadata: {
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+      },
+    };
+    await addDoc(ref, payload);
   }
 
   async updateDoc(
