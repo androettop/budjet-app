@@ -1,20 +1,21 @@
 import {
-  doc,
-  getDoc,
-  setDoc,
-  updateDoc,
-  getDocs,
   collection,
+  doc,
   Firestore,
-  Timestamp,
+  getDoc,
+  getDocs,
   query,
   QueryConstraint,
+  setDoc,
+  Timestamp,
+  updateDoc,
 } from "firebase/firestore";
 import {
+  b64decode,
+  decryptData,
   deriveKey,
   encryptData,
-  decryptData,
-  b64decode,
+  generateSalt,
 } from "../helpers/crypto";
 import type { SerializableObject } from "../types/data";
 
@@ -38,6 +39,29 @@ export class EncryptedDB {
   private constructor(db: Firestore, uid: string) {
     this.db = db;
     this.uid = uid;
+  }
+
+  /**
+   * Be careful when using this method, as it will overwrite the master password and generate a new salt and OK check.
+   * Existing encrypted data will become undecryptable.
+   */
+  static async newMasterPassword(
+    db: Firestore,
+    uid: string,
+    newPassword: string,
+  ): Promise<void> {
+    const salt = generateSalt();
+    const newKey = await deriveKey(newPassword, salt.raw);
+
+    const { iv: ivB64, ciphertext } = await encryptData("OK", newKey);
+
+    await updateDoc(doc(db, "users", uid), {
+      salt: salt.base64,
+      authCheck: {
+        iv: ivB64,
+        ciphertext,
+      },
+    });
   }
 
   static async unlock(

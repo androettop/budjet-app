@@ -17,6 +17,10 @@ export function b64decode(str: string): Uint8Array {
   return Uint8Array.from(atob(str), (c) => c.charCodeAt(0));
 }
 
+export function generateIV(): Uint8Array {
+  return crypto.getRandomValues(new Uint8Array(12)); // AES-GCM 96-bit IV
+}
+
 /**
  * Derives a 256-bit AES-GCM key from a password and a salt using PBKDF2
  */
@@ -54,7 +58,7 @@ export async function encryptData(
   data: Serializable,
   key: CryptoKey,
 ): Promise<{ iv: string; ciphertext: string }> {
-  const iv = crypto.getRandomValues(new Uint8Array(12)); // 96-bit IV for AES-GCM
+  const iv = generateIV();
   const plaintext = encoder.encode(JSON.stringify(data));
 
   const ciphertextBuffer = await crypto.subtle.encrypt(
