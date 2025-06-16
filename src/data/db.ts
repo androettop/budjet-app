@@ -18,6 +18,7 @@ import {
   generateSalt,
 } from "../helpers/crypto";
 import type { SerializableObject } from "../types/data";
+import { CodedError, errorCodes } from "../helpers/errors";
 
 type Metadata = {
   createdAt: Timestamp;
@@ -78,10 +79,12 @@ export class EncryptedDB {
 
     const authCheckRef = doc(db, "authChecks", uid);
     const snap = await getDoc(authCheckRef);
-    if (!snap.exists()) throw new Error("Auth check information not found");
+    if (!snap.exists())
+      throw new CodedError(errorCodes.AUTH_INFO_NOT_INITIALIZED);
 
     const { salt, authCheck } = snap.data();
-    if (!salt || !authCheck) throw new Error("Missing encryption metadata");
+    if (!salt || !authCheck)
+      throw new CodedError(errorCodes.AUTH_INFO_NOT_INITIALIZED);
 
     const key = await deriveKey(masterPassword, b64decode(salt));
     const check = await decryptData(
@@ -89,7 +92,8 @@ export class EncryptedDB {
       authCheck.iv,
       key,
     ).catch(() => null);
-    if (check !== "OK") throw new Error("Invalid master password");
+    if (check !== "OK")
+      throw new CodedError(errorCodes.INVALID_MASTER_PASSWORD);
 
     encryptedDB.key = key;
     return encryptedDB;
@@ -97,7 +101,7 @@ export class EncryptedDB {
 
   static getInstance(): EncryptedDB {
     if (!EncryptedDB.instance || !EncryptedDB.instance.key) {
-      throw new Error("EncryptedDB is not unlocked");
+      throw new CodedError(errorCodes.DB_IS_LOCKED);
     }
     return EncryptedDB.instance;
   }
@@ -108,7 +112,7 @@ export class EncryptedDB {
   ): Promise<{ data: SerializableObject; metadata: Metadata }> {
     const ref = doc(this.db, path, ...pathSegments);
     const snap = await getDoc(ref);
-    if (!snap.exists()) throw new Error("Document not found");
+    if (!snap.exists()) throw new CodedError(errorCodes.DOC_NOT_FOUND);
 
     const { iv, ciphertext, metadata } = snap.data() as FirestoreDoc;
     const data = (await decryptData(
