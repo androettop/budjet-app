@@ -126,7 +126,7 @@ const Layout = () => {
           </List>
         </Box>
       </Drawer>
-      <Container>
+      <Container sx={{ paddingY: 2 }}>
         <Outlet />
       </Container>
     </>

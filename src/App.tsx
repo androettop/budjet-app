@@ -6,6 +6,7 @@ import Layout from "./components/Layout/Layout";
 import { pages } from "./helpers/pages";
 import { useAuthChange } from "./hooks/useAuthChange";
 import { UserProvider } from "./hooks/useUserData";
+import DialogManager from "./components/DialogMaganer/DialogMaganer";
 
 const theme = createTheme({
   palette: {
@@ -79,6 +80,7 @@ const App = () => {
     <UserProvider value={{ user, isLoading }}>
       <ThemeProvider theme={theme}>
         <CssBaseline />
+        <DialogManager />
         <RouterProvider router={router} />
       </ThemeProvider>
     </UserProvider>
