@@ -80,8 +80,9 @@ const App = () => {
     <UserProvider value={{ user, isLoading }}>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <DialogManager />
-        <RouterProvider router={router} />
+        <DialogManager>
+          <RouterProvider router={router} />
+        </DialogManager>
       </ThemeProvider>
     </UserProvider>
   );

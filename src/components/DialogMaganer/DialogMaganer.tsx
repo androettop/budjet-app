@@ -1,26 +1,14 @@
-import { createContext, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import { v4 as uuid } from "uuid";
+import { DialogManagerContext } from "../../hooks/useDialog";
+import useStaticHandler from "../../hooks/useStaticHandler";
 import type {
   DataDialogConfig,
   DialogManagerEventHandler,
   DialogManagerValue,
 } from "../../types/dialogs";
 import DataDialog from "../DataDialog/DataDialog";
-import { v4 as uuid } from "uuid";
-import { CodedError, errorCodes } from "../../helpers/errors";
-import useStaticHandler from "../../hooks/useStaticHandler";
 
-const notInitialized = () => {
-  throw new CodedError(errorCodes.DIALOG_MANAGER_NOT_INITIALIZED);
-};
-
-const DialogManagerContext = createContext<DialogManagerValue>({
-  addDialog: notInitialized,
-  removeDialog: notInitialized,
-  openDialog: notInitialized,
-  closeDialog: notInitialized,
-  isDialogOpen: notInitialized,
-  dialogOn: notInitialized,
-});
 const DialogManagerProvider = DialogManagerContext.Provider;
 
 interface DialogManagerProps {
