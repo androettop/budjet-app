@@ -8,7 +8,6 @@ const DialogSandboxPage = () => {
   const [actionsLog, setActionsLog] = useState<string[]>([]);
 
   const sampleDialogConfig: DataDialogConfig = {
-    id: "sampleDialog",
     title: "Sample Dialog",
     content: "This is a sample dialog content.",
     actions: [

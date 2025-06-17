@@ -23,7 +23,6 @@ export type DataDialogAction = {
 };
 
 export type DataDialogConfig = {
-  id: string;
   title?: string;
   content?: string;
   fields?: DataDialogFormField[];
@@ -31,13 +30,12 @@ export type DataDialogConfig = {
 };
 
 export type DialogManagerValue = {
-  dialogs: Record<string, DataDialogConfig>;
-  addDialog: (config: DataDialogConfig) => void;
+  addDialog: (config: DataDialogConfig) => string;
   removeDialog: (id: string) => void;
   openDialog: (id: string) => void;
   closeDialog: (id: string) => void;
   isDialogOpen: (id: string) => boolean;
-  on: (
+  dialogOn: (
     id: string,
     actionName: string,
     callback: (formData: unknown) => void
@@ -47,4 +45,4 @@ export type DialogManagerValue = {
 export type DialogManagerEventHandler = {
   actionName: string;
   callback: (formData: unknown) => void;
-} 
+};

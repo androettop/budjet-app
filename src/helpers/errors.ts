@@ -6,6 +6,7 @@ export const errorCodes = {
   INVALID_MASTER_PASSWORD: "INVALID_MASTER_PASSWORD",
   DB_IS_LOCKED: "DB_IS_LOCKED",
   DOC_NOT_FOUND: "DOC_NOT_FOUND",
+  DIALOG_MANAGER_NOT_INITIALIZED: "DIALOG_MANAGER_NOT_INITIALIZED",
 } as const;
 
 export type ErrorCode = keyof typeof errorCodes;
