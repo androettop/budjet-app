@@ -42,14 +42,14 @@ const DialogSandboxPage = () => {
     dialogOn(dialogId!, "ok", (formData) => {
       setActionsLog((prev) => [
         ...prev,
-        `Action 'ok' executed with data: ${JSON.stringify(formData)}`,
+        `Action 'ok' executed in dialog 1 with data: ${JSON.stringify(formData)}`,
       ]);
     });
 
     dialogOn(dialogId!, "cancel", (formData) => {
       setActionsLog((prev) => [
         ...prev,
-        `Action 'ok' executed with data: ${JSON.stringify(formData)}`,
+        `Action 'cancel' executed in dialog 1 with data: ${JSON.stringify(formData)}`,
       ]);
     });
 
@@ -57,6 +57,13 @@ const DialogSandboxPage = () => {
       setActionsLog((prev) => [
         ...prev,
         `Action 'ok' executed in dialog 2 with data: ${JSON.stringify(formData)}`,
+      ]);
+    });
+
+    dialogOn(dialog2Id, "cancel", (formData) => {
+      setActionsLog((prev) => [
+        ...prev,
+        `Action 'cancel' executed in dialog 2 with data: ${JSON.stringify(formData)}`,
       ]);
     });
 

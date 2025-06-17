@@ -32,6 +32,15 @@ const DialogManager = ({ children }: DialogManagerProps) => {
       delete newDialogs[id];
       return newDialogs;
     });
+    // remove from open dialogs if it is open
+    if (openDialogs.includes(id)) {
+      setOpenDialogs((prev) => prev.filter((dialogId) => dialogId !== id));
+    }
+    // remove event handlers for this dialog
+    if (eventHandlers.current[id]) {
+      delete eventHandlers.current[id];
+    }
+    return id;
   });
 
   const handleOpenDialog = useStaticHandler((id: string) => {
@@ -52,10 +61,8 @@ const DialogManager = ({ children }: DialogManagerProps) => {
 
   const handleOn = useStaticHandler(
     (id: string, actionName: string, callback: (formData: unknown) => void) => {
-      if (dialogs[id]) {
-        eventHandlers.current[id] = eventHandlers.current[id] || [];
-        eventHandlers.current[id].push({ actionName, callback });
-      }
+      eventHandlers.current[id] = eventHandlers.current[id] || [];
+      eventHandlers.current[id].push({ actionName, callback });
     }
   );
 
@@ -77,6 +84,19 @@ const DialogManager = ({ children }: DialogManagerProps) => {
       handleRemoveDialog,
     ]
   );
+
+  const handleOnAction = useStaticHandler(
+    (id: string, actionName: string, formData: unknown) => {
+      const allHandlers = eventHandlers.current[id] || [];
+      const actionHandlers = allHandlers.filter(
+        (h) => h.actionName === actionName
+      );
+      actionHandlers.forEach((handler) => {
+        handler.callback(formData);
+      });
+    }
+  );
+
   return (
     <DialogManagerProvider value={providerValue}>
       {Object.entries(dialogs).map(([id, config]) => (
@@ -85,13 +105,9 @@ const DialogManager = ({ children }: DialogManagerProps) => {
           open={openDialogs[0] === id}
           onClose={() => handleCloseDialog(id)}
           config={config}
-          onAction={(actionName, formData) => {
-            const handlers = eventHandlers.current[id] || [];
-            const handler = handlers.find((h) => h.actionName === actionName);
-            if (handler) {
-              handler.callback(formData);
-            }
-          }}
+          onAction={(actionName, formData) =>
+            handleOnAction(id, actionName, formData)
+          }
         />
       ))}
       {children}
