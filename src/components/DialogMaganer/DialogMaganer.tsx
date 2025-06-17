@@ -82,7 +82,7 @@ const DialogManager = ({ children }: DialogManagerProps) => {
       {Object.entries(dialogs).map(([id, config]) => (
         <DataDialog
           key={id}
-          open={openDialogs.includes(id)}
+          open={openDialogs[0] === id}
           onClose={() => handleCloseDialog(id)}
           config={config}
           onAction={(actionName, formData) => {
