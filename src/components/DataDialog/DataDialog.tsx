@@ -70,6 +70,12 @@ const DataDialog = ({ open, config, onAction, onClose }: DataDialogProps) => {
     }
   };
 
+  // if there is more than one action with form validations, we should disable the enter key
+  // because will requiere multiple submit buttons, and the user may accidentally submit the
+  // form with the wrong button
+  const shouldDisableEnter =
+    config.actions.filter((action) => action.validate).length > 1;
+
   return (
     <Dialog open={open} onClose={() => handleAction(defaultCancelAction)}>
       <form onSubmit={(e) => handleOnSubmit(e)}>
@@ -86,6 +92,7 @@ const DataDialog = ({ open, config, onAction, onClose }: DataDialogProps) => {
               {fields.map((fieldConfig) => (
                 <Grid size={12} key={fieldConfig.name}>
                   <DialogField
+                    disableEnter={shouldDisableEnter}
                     config={fieldConfig}
                     value={formData[fieldConfig.name]}
                     onChange={(value) =>

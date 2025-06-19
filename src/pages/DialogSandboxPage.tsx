@@ -114,6 +114,13 @@ const DialogSandboxPage = () => {
       ]);
     });
 
+    dialogOn(promptId!, "reset", (formData) => {
+      setActionsLog((prev) => [
+        ...prev,
+        `Action 'reset' executed in prompt 1 with data: ${JSON.stringify(formData)}`,
+      ]);
+    });
+
     dialogOn(dialogId!, "ok", (formData) => {
       setActionsLog((prev) => [
         ...prev,
