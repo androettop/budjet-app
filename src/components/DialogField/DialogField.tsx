@@ -17,6 +17,7 @@ const DialogField = ({ config, onChange, value }: DialogFieldProps) => {
         type={config.subtype}
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        required={config.required}
         variant="outlined"
       />
     );
@@ -27,6 +28,7 @@ const DialogField = ({ config, onChange, value }: DialogFieldProps) => {
         label={config.label}
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        required={config.required}
         variant="outlined"
       >
         {config.options.map((option) => (

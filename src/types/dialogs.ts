@@ -45,6 +45,7 @@ export type DataDialogAction = {
   color: "primary" | "inherit";
   validate?: boolean;
   closeDialog?: boolean;
+  resetForm?: boolean;
 };
 
 export type DataDialogConfig = {

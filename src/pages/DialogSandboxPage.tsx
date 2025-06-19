@@ -26,10 +26,12 @@ const DialogSandboxPage = () => {
           type: "text",
           subtype: "email",
           name: "email",
+          required: true,
         },
         {
           label: "City",
           name: "city",
+          placeholder: "Select a city",
           type: "select",
           defaultValue: "NY",
           options: [
@@ -55,9 +57,16 @@ const DialogSandboxPage = () => {
           name: "cancel",
         },
         {
+          label: "Reset",
+          color: "inherit",
+          name: "reset",
+          closeDialog: false,
+        },
+        {
           label: "OK",
           color: "primary",
           name: "ok",
+          validate: true,
         },
       ],
     });
@@ -191,7 +200,7 @@ const DialogSandboxPage = () => {
           </Typography>
 
           {actionsLog.length > 0 ? (
-            actionsLog.map((log) => <div>{log}</div>)
+            actionsLog.map((log) => <div key={log}>{log}</div>)
           ) : (
             <Typography sx={{ padding: 1 }}>No actions logged yet.</Typography>
           )}
