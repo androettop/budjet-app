@@ -6,13 +6,18 @@ import {
   DialogContentText,
   DialogTitle,
 } from "@mui/material";
-import type { DataDialogAction, DataDialogConfig } from "../../types/dialogs";
+import type {
+  DataDialogAction,
+  DataDialogConfig,
+  DataDialogFormData,
+} from "../../types/dialogs";
 import { useState } from "react";
+import DialogField from "../DialogField/DialogField";
 
-export interface DataDialogProps<T> {
+export interface DataDialogProps {
   open: boolean;
   config: DataDialogConfig;
-  onAction: (actionName: string, formData: T) => void;
+  onAction: (actionName: string, formData: DataDialogFormData) => void;
   onClose: () => void;
 }
 
@@ -22,13 +27,14 @@ const defaultCancelAction: DataDialogAction = {
   color: "inherit",
 };
 
-const DataDialog = <T,>({
-  open,
-  config,
-  onAction,
-  onClose,
-}: DataDialogProps<T>) => {
-  const [formData, setFormData] = useState<T>({} as T);
+const DataDialog = ({ open, config, onAction, onClose }: DataDialogProps) => {
+  const fields = config.fields || [];
+
+  const defaultValues = Object.fromEntries(
+    fields.map(({ name, defaultValue }) => [name, defaultValue ?? ""]),
+  );
+
+  const [formData, setFormData] = useState<DataDialogFormData>(defaultValues);
 
   const handleAction = (action: DataDialogAction) => {
     onAction(action.name, formData);
@@ -40,41 +46,24 @@ const DataDialog = <T,>({
   return (
     <Dialog open={open} onClose={() => handleAction(defaultCancelAction)}>
       {config.title && <DialogTitle>{config.title}</DialogTitle>}
-      {config.content && (
+      {(config.content || fields.length > 0) && (
         <DialogContent>
-          <DialogContentText>{config.content}</DialogContentText>
-        </DialogContent>
-      )}
-      {config.fields && (
-        <DialogContent>
-          {config.fields.map((field, index) => (
-            <div key={index}>
-              <label>
-                {field.label}
-                <input
-                  type={field.type}
-                  required={field.required}
-                  placeholder={field.placeholder}
-                  defaultValue={field.defaultValue}
-                  onChange={(e) => {
-                    setFormData({
-                      ...formData,
-                      [field.label]: e.target.value,
-                    });
-                  }}
-                >
-                  {field.options &&
-                    field.options.map((option, optionIndex) => (
-                      <option key={optionIndex} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                </input>
-              </label>
-            </div>
+          {config.content && (
+            <DialogContentText>{config.content}</DialogContentText>
+          )}
+          {fields.map((fieldConfig) => (
+            <DialogField
+              key={fieldConfig.name}
+              config={fieldConfig}
+              value={formData[fieldConfig.name]}
+              onChange={(value) =>
+                setFormData({ ...formData, [fieldConfig.name]: value })
+              }
+            />
           ))}
         </DialogContent>
       )}
+
       {config.actions && (
         <DialogActions>
           {config.actions.map((action, index) => (

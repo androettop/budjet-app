@@ -3,16 +3,41 @@ export type DataDialogFormFieldOption = {
   value: string;
 };
 
-export type DataDialogFormField = {
+export type BaseDataDialogFormField = {
+  name: string;
   label: string;
-  type: string;
-  required: boolean;
+  required?: boolean;
   placeholder?: string;
   defaultValue?: string;
-  options?: DataDialogFormFieldOption[];
-  pattern?: RegExp;
   validate?: (formData: unknown) => boolean;
 };
+
+export const textFieldTypes = [
+  "text",
+  "password",
+  "email",
+  "tel",
+  "url",
+  "number",
+  "date",
+  "time",
+  "datetime-local",
+  "color",
+  "hidden",
+] as const;
+
+export type DataDialogTextField = BaseDataDialogFormField & {
+  type: "text";
+  subtype?: (typeof textFieldTypes)[number];
+  pattern?: RegExp;
+};
+
+export type DataDialogSelectField = BaseDataDialogFormField & {
+  type: "select";
+  options: DataDialogFormFieldOption[];
+};
+
+export type DataDialogFormField = DataDialogTextField | DataDialogSelectField;
 
 export type DataDialogAction = {
   name: string;
@@ -38,7 +63,7 @@ export type DialogManagerValue = {
   dialogOn: (
     id: string,
     actionName: string,
-    callback: (formData: unknown) => void
+    callback: (formData: unknown) => void,
   ) => void;
 };
 
@@ -46,3 +71,5 @@ export type DialogManagerEventHandler = {
   actionName: string;
   callback: (formData: unknown) => void;
 };
+
+export type DataDialogFormData = Record<string, string>;

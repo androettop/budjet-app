@@ -5,11 +5,63 @@ import useStaticHandler from "../hooks/useStaticHandler";
 
 const DialogSandboxPage = () => {
   const [actionsLog, setActionsLog] = useState<string[]>([]);
+  const promptIdRef = useRef<string | null>(null);
   const dialogIdRef = useRef<string | null>(null);
   const dialog2IdRef = useRef<string | null>(null);
   const { addDialog, removeDialog, openDialog, dialogOn } = useDialog();
 
   useEffect(() => {
+    const promptId = addDialog({
+      title: "Sample Prompt",
+      content: "This is a sample prompt content.",
+      fields: [
+        {
+          label: "Name",
+          type: "text",
+          name: "name",
+          defaultValue: "Pepito",
+        },
+        {
+          label: "Email",
+          type: "text",
+          subtype: "email",
+          name: "email",
+        },
+        {
+          label: "City",
+          name: "city",
+          type: "select",
+          defaultValue: "NY",
+          options: [
+            {
+              label: "New York",
+              value: "NY",
+            },
+            {
+              label: "Los Angeles",
+              value: "LA",
+            },
+            {
+              label: "Chicago",
+              value: "CH",
+            },
+          ],
+        },
+      ],
+      actions: [
+        {
+          label: "Cancel",
+          color: "inherit",
+          name: "cancel",
+        },
+        {
+          label: "OK",
+          color: "primary",
+          name: "ok",
+        },
+      ],
+    });
+
     const dialogId = addDialog({
       title: "Sample Dialog",
       content: "This is a sample dialog content.",
@@ -37,6 +89,20 @@ const DialogSandboxPage = () => {
           name: "ok",
         },
       ],
+    });
+
+    dialogOn(promptId!, "ok", (formData) => {
+      setActionsLog((prev) => [
+        ...prev,
+        `Action 'ok' executed in prompt 1 with data: ${JSON.stringify(formData)}`,
+      ]);
+    });
+
+    dialogOn(promptId!, "cancel", (formData) => {
+      setActionsLog((prev) => [
+        ...prev,
+        `Action 'cancel' executed in prompt 1 with data: ${JSON.stringify(formData)}`,
+      ]);
     });
 
     dialogOn(dialogId!, "ok", (formData) => {
@@ -69,10 +135,12 @@ const DialogSandboxPage = () => {
 
     dialogIdRef.current = dialogId;
     dialog2IdRef.current = dialog2Id;
+    promptIdRef.current = promptId;
 
     return () => {
       removeDialog(dialogId);
       removeDialog(dialog2Id);
+      removeDialog(promptId);
     };
   }, [addDialog, dialogOn, removeDialog]);
 
@@ -83,6 +151,10 @@ const DialogSandboxPage = () => {
   const handleOpen2Dialogs = useStaticHandler(() => {
     openDialog(dialogIdRef.current!);
     openDialog(dialog2IdRef.current!);
+  });
+
+  const handleOpenPrompt = useStaticHandler(() => {
+    openDialog(promptIdRef.current!);
   });
 
   return (
@@ -104,6 +176,14 @@ const DialogSandboxPage = () => {
               onClick={handleOpen2Dialogs}
             >
               Open 2 dialogs
+            </Button>
+
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleOpenPrompt}
+            >
+              Open Prompt Dialog
             </Button>
           </Box>
           <Typography variant="h5" sx={{ marginTop: 2 }}>
