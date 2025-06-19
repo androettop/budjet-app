@@ -4,10 +4,10 @@ import {
   Login as LoginIcon,
   Palette as PaletteIcon,
 } from "@mui/icons-material";
-import DialogSandboxPage from "../pages/DialogSandboxPage";
-import FirebaseSandboxPage from "../pages/FirebaseSandboxPage";
+import DialogSandboxPage from "../debug/pages/DialogSandboxPage";
+import FirebaseSandboxPage from "../debug/pages/FirebaseSandboxPage";
 import HomePage from "../pages/HomePage";
-import ThemeSandboxPage from "../pages/ThemeSandboxPage";
+import ThemeSandboxPage from "../debug/pages/ThemeSandboxPage";
 import type { Page } from "../types/pages";
 
 export const pages: Page[] = [

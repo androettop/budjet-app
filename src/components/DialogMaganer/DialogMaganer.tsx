@@ -2,11 +2,7 @@ import { useMemo, useRef, useState } from "react";
 import { v4 as uuid } from "uuid";
 import { DialogManagerContext } from "../../hooks/useDialog";
 import useStaticHandler from "../../hooks/useStaticHandler";
-import type {
-  DataDialogConfig,
-  DialogManagerEventHandler,
-  DialogManagerValue,
-} from "../../types/dialogs";
+import type { DataDialogConfig, DialogManagerValue } from "../../types/dialogs";
 import DataDialog from "../DataDialog/DataDialog";
 
 const DialogManagerProvider = DialogManagerContext.Provider;
@@ -18,7 +14,9 @@ interface DialogManagerProps {
 const DialogManager = ({ children }: DialogManagerProps) => {
   const [dialogs, setDialogs] = useState<Record<string, DataDialogConfig>>({});
   const [openDialogs, setOpenDialogs] = useState<string[]>([]);
-  const eventHandlers = useRef<Record<string, DialogManagerEventHandler[]>>({});
+  const eventHandlers = useRef<
+    Record<string, Record<string, (formData: unknown) => void>>
+  >({});
 
   const handleAddDialog = useStaticHandler((config: DataDialogConfig) => {
     const id = uuid();
@@ -55,15 +53,11 @@ const DialogManager = ({ children }: DialogManagerProps) => {
     }
   });
 
-  const handleIsDialogOpen = useStaticHandler((id: string) => {
-    return openDialogs.includes(id);
-  });
-
   const handleOn = useStaticHandler(
     (id: string, actionName: string, callback: (formData: unknown) => void) => {
       eventHandlers.current[id] = eventHandlers.current[id] || [];
-      eventHandlers.current[id].push({ actionName, callback });
-    }
+      eventHandlers.current[id][actionName] = callback;
+    },
   );
 
   const providerValue: DialogManagerValue = useMemo(
@@ -72,29 +66,25 @@ const DialogManager = ({ children }: DialogManagerProps) => {
       removeDialog: handleRemoveDialog,
       openDialog: handleOpenDialog,
       closeDialog: handleCloseDialog,
-      isDialogOpen: handleIsDialogOpen,
+      openDialogs: openDialogs,
       dialogOn: handleOn,
     }),
     [
       handleAddDialog,
       handleCloseDialog,
-      handleIsDialogOpen,
+      openDialogs,
       handleOn,
       handleOpenDialog,
       handleRemoveDialog,
-    ]
+    ],
   );
+
+  console.log(eventHandlers.current);
 
   const handleOnAction = useStaticHandler(
     (id: string, actionName: string, formData: unknown) => {
-      const allHandlers = eventHandlers.current[id] || [];
-      const actionHandlers = allHandlers.filter(
-        (h) => h.actionName === actionName
-      );
-      actionHandlers.forEach((handler) => {
-        handler.callback(formData);
-      });
-    }
+      eventHandlers.current?.[id]?.[actionName]?.(formData);
+    },
   );
 
   return (

@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { EncryptedDB } from "../data/db";
 import { useUserData } from "./useUserData";
+import useStaticHandler from "./useStaticHandler";
 
 export function useDbLock(intervalMs = 1000) {
   const [isDbLocked, setIsDbLocked] = useState(() => EncryptedDB.isLocked());
@@ -14,12 +15,12 @@ export function useDbLock(intervalMs = 1000) {
     return () => clearInterval(interval);
   }, [intervalMs]);
 
-  const handleLock = () => {
+  const handleLock = useStaticHandler(() => {
     EncryptedDB.lock();
     setIsDbLocked(true);
-  };
+  });
 
-  const handleUnlock = () => {
+  const handleUnlock = useStaticHandler(() => {
     if (user?.uid) {
       EncryptedDB.unlock(user?.uid, async () => {
         return new Promise((resolve) => {
@@ -36,9 +37,12 @@ export function useDbLock(intervalMs = 1000) {
       });
       setIsDbLocked(false);
     }
-  };
+  });
 
-  return { isDbLocked, lockDb: handleLock, unlockDb: handleUnlock };
+  return useMemo(
+    () => ({ isDbLocked, lockDb: handleLock, unlockDb: handleUnlock }),
+    [isDbLocked, handleLock, handleUnlock],
+  );
 }
 
 export default useDbLock;

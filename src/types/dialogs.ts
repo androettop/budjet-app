@@ -60,17 +60,12 @@ export type DialogManagerValue = {
   removeDialog: (id: string) => void;
   openDialog: (id: string) => void;
   closeDialog: (id: string) => void;
-  isDialogOpen: (id: string) => boolean;
   dialogOn: (
     id: string,
     actionName: string,
     callback: (formData: unknown) => void,
   ) => void;
-};
-
-export type DialogManagerEventHandler = {
-  actionName: string;
-  callback: (formData: unknown) => void;
+  openDialogs: string[];
 };
 
 export type DataDialogFormData = Record<string, string>;

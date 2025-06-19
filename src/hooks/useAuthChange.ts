@@ -1,6 +1,6 @@
 import { onAuthStateChanged, type User } from "firebase/auth";
 import { fbAuth } from "../helpers/firebase";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { EncryptedDB } from "../data/db";
 import useStaticHandler from "./useStaticHandler";
 
@@ -33,5 +33,8 @@ export const useAuthChange = () => {
     return () => unsubscribe();
   }, [handleUpdateUser]);
 
-  return { user: userState, isLoading };
+  return useMemo(
+    () => ({ user: userState, isLoading }),
+    [userState, isLoading],
+  );
 };
