@@ -5,6 +5,8 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
+  Grid,
+  useTheme,
 } from "@mui/material";
 import type {
   DataDialogAction,
@@ -28,6 +30,8 @@ const defaultCancelAction: DataDialogAction = {
 };
 
 const DataDialog = ({ open, config, onAction, onClose }: DataDialogProps) => {
+  const theme = useTheme();
+
   const fields = config.fields || [];
 
   const defaultValues = Object.fromEntries(
@@ -40,6 +44,10 @@ const DataDialog = ({ open, config, onAction, onClose }: DataDialogProps) => {
     onAction(action.name, formData);
     if (action.closeDialog ?? true) {
       onClose();
+      setTimeout(() => {
+        // Reset form data after closing the dialog
+        setFormData(defaultValues);
+      }, theme.transitions.duration.leavingScreen);
     }
   };
 
@@ -48,19 +56,25 @@ const DataDialog = ({ open, config, onAction, onClose }: DataDialogProps) => {
       {config.title && <DialogTitle>{config.title}</DialogTitle>}
       {(config.content || fields.length > 0) && (
         <DialogContent>
-          {config.content && (
-            <DialogContentText>{config.content}</DialogContentText>
-          )}
-          {fields.map((fieldConfig) => (
-            <DialogField
-              key={fieldConfig.name}
-              config={fieldConfig}
-              value={formData[fieldConfig.name]}
-              onChange={(value) =>
-                setFormData({ ...formData, [fieldConfig.name]: value })
-              }
-            />
-          ))}
+          <Grid container overflow="hidden" spacing={2}>
+            {config.content && (
+              <Grid size={12}>
+                <DialogContentText>{config.content}</DialogContentText>
+              </Grid>
+            )}
+
+            {fields.map((fieldConfig) => (
+              <Grid size={12} key={fieldConfig.name}>
+                <DialogField
+                  config={fieldConfig}
+                  value={formData[fieldConfig.name]}
+                  onChange={(value) =>
+                    setFormData({ ...formData, [fieldConfig.name]: value })
+                  }
+                />
+              </Grid>
+            ))}
+          </Grid>
         </DialogContent>
       )}
 

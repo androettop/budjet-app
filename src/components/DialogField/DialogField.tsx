@@ -11,6 +11,7 @@ const DialogField = ({ config, onChange, value }: DialogFieldProps) => {
   if (config.type === "text") {
     return (
       <TextField
+        fullWidth
         label={config.label}
         placeholder={config.placeholder}
         type={config.subtype}
@@ -22,6 +23,7 @@ const DialogField = ({ config, onChange, value }: DialogFieldProps) => {
   } else if (config.type === "select") {
     return (
       <Select
+        fullWidth
         label={config.label}
         value={value}
         onChange={(e) => onChange(e.target.value)}
