@@ -35,13 +35,14 @@ const useDialog = <T>(config: DataDialogConfig) => {
   );
 
   const dialogId = useRef<string>("");
+  const dialogConfigRef = useRef<DataDialogConfig>(config);
 
   useEffect(() => {
-    dialogId.current = addDialog(config);
+    dialogId.current = addDialog(dialogConfigRef.current);
     return () => {
       removeDialog(dialogId.current);
     };
-  }, [addDialog, config, removeDialog]);
+  }, [addDialog, removeDialog]);
 
   const handleDialogOn = useStaticHandler(
     (actionName: string, callback: DialogActionCallback<T>) => {

@@ -171,6 +171,7 @@ export class EncryptedDB {
       console.warn("Database is already locked");
     } else {
       EncryptedDB.instance = null;
+      sessionStorage.removeItem("encryptedDBKey");
     }
   }
 
