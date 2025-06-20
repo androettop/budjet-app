@@ -62,7 +62,13 @@ const Layout = () => {
             <Tooltip title={isDbLocked ? "Unlock Database" : "Lock Database"}>
               <Button
                 color="inherit"
-                onClick={isDbLocked ? unlockDb : lockDb}
+                onClick={() => {
+                  if (isDbLocked) {
+                    unlockDb();
+                  } else {
+                    lockDb();
+                  }
+                }}
                 startIcon={!isDbLocked ? <LockOpenIcon /> : <LockIcon />}
                 loading={isUnlocking}
                 loadingPosition="start"
