@@ -9,6 +9,7 @@ export type BaseDataDialogFormField = {
   required?: boolean;
   placeholder?: string;
   defaultValue?: string;
+  autoFocus?: boolean;
 };
 
 export const textFieldTypes = [

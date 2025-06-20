@@ -24,6 +24,7 @@ export const unlockDBDialogConfig: DataDialogConfig = {
       subtype: "password",
       required: true,
       placeholder: "Enter your password",
+      autoFocus: true,
     },
   ],
 };
@@ -41,6 +42,7 @@ export const invalidPasswordDialogConfig: DataDialogConfig = {
       color: "primary",
       label: "Try Again",
       name: "retry",
+      validate: true,
     },
   ],
 };

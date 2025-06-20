@@ -6,6 +6,7 @@ import {
   TextField,
 } from "@mui/material";
 import { type DataDialogFormField } from "../../types/dialogs";
+import { useEffect, useRef } from "react";
 
 export interface DialogFieldProps {
   config: DataDialogFormField;
@@ -20,6 +21,13 @@ const DialogField = ({
   value,
   disableEnter = false,
 }: DialogFieldProps) => {
+  const inputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (config.autoFocus && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [config.autoFocus]);
+
   if (config.type === "text") {
     return (
       <TextField
@@ -31,6 +39,7 @@ const DialogField = ({
         onChange={(e) => onChange(e.target.value)}
         required={config.required}
         variant="outlined"
+        inputRef={inputRef}
         onKeyDown={(e) => {
           if (disableEnter && e.key === "Enter") {
             e.preventDefault();
@@ -48,6 +57,7 @@ const DialogField = ({
           onChange={(e) => onChange(e.target.value)}
           required={config.required}
           variant="outlined"
+          inputRef={inputRef}
           onKeyDown={(e) => {
             if (disableEnter && e.key === "Enter") {
               e.preventDefault();

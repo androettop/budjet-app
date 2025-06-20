@@ -76,6 +76,8 @@ const DataDialog = ({ open, config, onAction, onClose }: DataDialogProps) => {
   const shouldDisableEnter =
     config.actions.filter((action) => action.validate).length > 1;
 
+  const enableActionAutoFocus = !fields.some((field) => field.autoFocus);
+
   return (
     <Dialog open={open} onClose={() => handleAction(defaultCancelAction)}>
       <form onSubmit={(e) => handleOnSubmit(e)}>
@@ -116,7 +118,9 @@ const DataDialog = ({ open, config, onAction, onClose }: DataDialogProps) => {
                 }
                 color={action.color}
                 variant="contained"
-                autoFocus={index === config.actions.length - 1}
+                autoFocus={
+                  enableActionAutoFocus && index === config.actions.length - 1
+                }
                 type={action.validate ? "submit" : "button"}
               >
                 {action.label}

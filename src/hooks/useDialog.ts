@@ -55,7 +55,6 @@ const useDialog = <T>(config: DataDialogConfig) => {
   const handleOpen = useStaticHandler(() => openDialog(dialogId.current));
   const handleClose = useStaticHandler(() => closeDialog(dialogId.current));
 
-  console.log(dialogId.current, handleOpen);
   return useMemo(
     () => ({
       open: handleOpen,
