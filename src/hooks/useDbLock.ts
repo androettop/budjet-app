@@ -8,7 +8,6 @@ import {
   unlockDBDialogConfig,
 } from "../dialogs/db";
 import { errorCodes, type CodedError } from "../helpers/errors";
-import type { User } from "firebase/auth";
 
 export function useDbLock() {
   const enterKeyDialog = useDialog<{ password: string }>(unlockDBDialogConfig);
