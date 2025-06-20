@@ -1,5 +1,9 @@
 import { createContext, useContext, useEffect, useMemo, useRef } from "react";
-import type { DataDialogConfig, DialogManagerValue } from "../types/dialogs";
+import type {
+  DataDialogConfig,
+  DialogActionCallback,
+  DialogManagerValue,
+} from "../types/dialogs";
 import { CodedError, errorCodes } from "../helpers/errors";
 import useStaticHandler from "./useStaticHandler";
 
@@ -13,18 +17,22 @@ export const DialogManagerContext = createContext<DialogManagerValue>({
   openDialog: notInitialized,
   closeDialog: notInitialized,
   dialogOn: notInitialized,
+  dialogOff: notInitialized,
   openDialogs: [],
 });
 
-const useDialog = (config: DataDialogConfig) => {
+const useDialog = <T>(config: DataDialogConfig) => {
   const {
     addDialog,
     removeDialog,
     openDialog,
     closeDialog,
     dialogOn,
+    dialogOff,
     openDialogs,
-  } = useContext(DialogManagerContext);
+  } = useContext<DialogManagerValue<T>>(
+    DialogManagerContext as React.Context<DialogManagerValue<T>>,
+  );
 
   const dialogId = useRef<string>("");
 
@@ -36,23 +44,28 @@ const useDialog = (config: DataDialogConfig) => {
   }, [addDialog, config, removeDialog]);
 
   const handleDialogOn = useStaticHandler(
-    (actionName: string, callback: (formData: unknown) => void) => {
+    (actionName: string, callback: DialogActionCallback<T>) => {
       dialogOn(dialogId.current, actionName, callback);
     },
   );
 
+  const handleDialogOff = useStaticHandler((actionName: string) => {
+    dialogOff(dialogId.current, actionName);
+  });
   const handleOpen = useStaticHandler(() => openDialog(dialogId.current));
   const handleClose = useStaticHandler(() => closeDialog(dialogId.current));
 
+  console.log(dialogId.current, handleOpen);
   return useMemo(
     () => ({
       open: handleOpen,
       close: handleClose,
       on: handleDialogOn,
+      off: handleDialogOff,
       // TODO: test if using the id ref here can cause render issues
       isOpen: openDialogs.includes(dialogId.current),
     }),
-    [handleOpen, handleClose, handleDialogOn, openDialogs],
+    [handleOpen, handleClose, handleDialogOn, handleDialogOff, openDialogs],
   );
 };
 

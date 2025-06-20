@@ -9,7 +9,6 @@ export type BaseDataDialogFormField = {
   required?: boolean;
   placeholder?: string;
   defaultValue?: string;
-  validate?: (formData: unknown) => boolean;
 };
 
 export const textFieldTypes = [
@@ -55,7 +54,11 @@ export type DataDialogConfig = {
   actions: DataDialogAction[];
 };
 
-export type DialogManagerValue = {
+export type DialogActionCallback<T = Record<string, string>> = (
+  formData: T,
+) => void;
+
+export type DialogManagerValue<FormDataType = unknown> = {
   addDialog: (config: DataDialogConfig) => string;
   removeDialog: (id: string) => void;
   openDialog: (id: string) => void;
@@ -63,8 +66,9 @@ export type DialogManagerValue = {
   dialogOn: (
     id: string,
     actionName: string,
-    callback: (formData: unknown) => void,
+    callback: DialogActionCallback<FormDataType>,
   ) => void;
+  dialogOff: (id: string, actionName: string) => void;
   openDialogs: string[];
 };
 

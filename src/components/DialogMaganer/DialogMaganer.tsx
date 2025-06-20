@@ -2,7 +2,11 @@ import { useMemo, useRef, useState } from "react";
 import { v4 as uuid } from "uuid";
 import { DialogManagerContext } from "../../hooks/useDialog";
 import useStaticHandler from "../../hooks/useStaticHandler";
-import type { DataDialogConfig, DialogManagerValue } from "../../types/dialogs";
+import type {
+  DataDialogConfig,
+  DialogActionCallback,
+  DialogManagerValue,
+} from "../../types/dialogs";
 import DataDialog from "../DataDialog/DataDialog";
 
 const DialogManagerProvider = DialogManagerContext.Provider;
@@ -15,7 +19,7 @@ const DialogManager = ({ children }: DialogManagerProps) => {
   const [dialogs, setDialogs] = useState<Record<string, DataDialogConfig>>({});
   const [openDialogs, setOpenDialogs] = useState<string[]>([]);
   const eventHandlers = useRef<
-    Record<string, Record<string, (formData: unknown) => void>>
+    Record<string, Record<string, DialogActionCallback>>
   >({});
 
   const handleAddDialog = useStaticHandler((config: DataDialogConfig) => {
@@ -54,11 +58,15 @@ const DialogManager = ({ children }: DialogManagerProps) => {
   });
 
   const handleOn = useStaticHandler(
-    (id: string, actionName: string, callback: (formData: unknown) => void) => {
+    (id: string, actionName: string, callback: DialogActionCallback) => {
       eventHandlers.current[id] = eventHandlers.current[id] || [];
       eventHandlers.current[id][actionName] = callback;
     },
   );
+
+  const handleOff = useStaticHandler((id: string, actionName: string) => {
+    delete eventHandlers.current[id]?.[actionName];
+  });
 
   const providerValue: DialogManagerValue = useMemo(
     () => ({
@@ -68,21 +76,21 @@ const DialogManager = ({ children }: DialogManagerProps) => {
       closeDialog: handleCloseDialog,
       openDialogs: openDialogs,
       dialogOn: handleOn,
+      dialogOff: handleOff,
     }),
     [
       handleAddDialog,
       handleCloseDialog,
       openDialogs,
       handleOn,
+      handleOff,
       handleOpenDialog,
       handleRemoveDialog,
     ],
   );
 
-  console.log(eventHandlers.current);
-
   const handleOnAction = useStaticHandler(
-    (id: string, actionName: string, formData: unknown) => {
+    (id: string, actionName: string, formData) => {
       eventHandlers.current?.[id]?.[actionName]?.(formData);
     },
   );

@@ -71,7 +71,6 @@ export class EncryptedDB {
   }
 
   async saveKeyInSessionStorage() {
-    debugger;
     if (this.key) {
       const exportedKey = await crypto.subtle.exportKey("jwk", this.key);
       sessionStorage.setItem("encryptedDBKey", JSON.stringify(exportedKey));
@@ -82,7 +81,7 @@ export class EncryptedDB {
 
   static async unlockFromSession(uid: string) {
     if (!EncryptedDB.isLocked()) {
-      console.log("Database already unlocked");
+      console.warn("Database already unlocked");
       return;
     }
 
@@ -136,7 +135,7 @@ export class EncryptedDB {
     const encryptedDB: EncryptedDB = EncryptedDB.instance || new EncryptedDB();
 
     if (!EncryptedDB.isLocked()) {
-      console.log("Database already unlocked");
+      console.warn("Database already unlocked");
       return;
     }
 

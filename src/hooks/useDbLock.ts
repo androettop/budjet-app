@@ -2,8 +2,17 @@ import { useEffect, useMemo, useState } from "react";
 import { EncryptedDB } from "../data/db";
 import { useUserData } from "./useUserData";
 import useStaticHandler from "./useStaticHandler";
+import useDialog from "./useDialog";
+import {
+  invalidPasswordDialogConfig,
+  unlockDBDialogConfig,
+} from "../dialogs/db";
+import { errorCodes, type CodedError } from "../helpers/errors";
 
 export function useDbLock(intervalMs = 1000) {
+  const enterKeyDialog = useDialog<{ password: string }>(unlockDBDialogConfig);
+  const invalidPasswordDialog = useDialog(invalidPasswordDialogConfig);
+
   const [isDbLocked, setIsDbLocked] = useState(() => EncryptedDB.isLocked());
   const user = useUserData();
 
@@ -20,22 +29,29 @@ export function useDbLock(intervalMs = 1000) {
     setIsDbLocked(true);
   });
 
-  const handleUnlock = useStaticHandler(() => {
+  const handleUnlock = useStaticHandler(async () => {
     if (user?.uid) {
-      EncryptedDB.unlock(user?.uid, async () => {
-        return new Promise((resolve) => {
-          while (true) {
-            const masterPassword = window
-              .prompt("Write your master password")
-              ?.trim();
-            if (masterPassword) {
-              resolve(masterPassword);
-              break;
-            }
-          }
+      try {
+        await EncryptedDB.unlock(user?.uid, async () => {
+          return new Promise((resolve) => {
+            enterKeyDialog.open();
+            enterKeyDialog.on("unlock", ({ password }) => {
+              enterKeyDialog.off("unlock");
+              resolve(password);
+            });
+          });
         });
-      });
-      setIsDbLocked(false);
+        setIsDbLocked(false);
+      } catch (error) {
+        const errorCode = (error as CodedError).code;
+        if (errorCode === errorCodes.INVALID_MASTER_PASSWORD) {
+          // TODO: Show error message to user and retry
+          invalidPasswordDialog.open();
+          invalidPasswordDialog.on("retry", () => {
+            handleUnlock();
+          });
+        }
+      }
     }
   });
 
