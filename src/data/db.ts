@@ -79,6 +79,10 @@ export class EncryptedDB {
     }
   }
 
+  static isKeyInSession() {
+    return sessionStorage.getItem("encryptedDBKey") !== null;
+  }
+
   static async unlockFromSession(uid: string) {
     if (!EncryptedDB.isLocked()) {
       console.warn("Database already unlocked");

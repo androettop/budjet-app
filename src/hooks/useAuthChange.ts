@@ -3,10 +3,12 @@ import { fbAuth } from "../helpers/firebase";
 import { useEffect, useMemo, useState } from "react";
 import { EncryptedDB } from "../data/db";
 import useStaticHandler from "./useStaticHandler";
+import useDbLock from "./useDbLock";
 
 export const useAuthChange = () => {
   const [userState, setUserState] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { unlockDb } = useDbLock();
 
   const handleUpdateUser = useStaticHandler(async (newUser: User | null) => {
     if (
@@ -17,8 +19,13 @@ export const useAuthChange = () => {
       EncryptedDB.lock();
     }
 
-    if (newUser?.uid) {
-      await EncryptedDB.unlockFromSession(newUser?.uid);
+    if (userState?.uid !== newUser?.uid && newUser?.uid) {
+      if (EncryptedDB.isKeyInSession()) {
+        await EncryptedDB.unlockFromSession(newUser?.uid);
+      } else {
+        // Open the unlock dialog after the user is ready
+        unlockDb(newUser?.uid);
+      }
     }
 
     setUserState(newUser);

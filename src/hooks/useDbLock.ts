@@ -8,56 +8,71 @@ import {
   unlockDBDialogConfig,
 } from "../dialogs/db";
 import { errorCodes, type CodedError } from "../helpers/errors";
+import type { User } from "firebase/auth";
 
-export function useDbLock(intervalMs = 1000) {
+export function useDbLock() {
   const enterKeyDialog = useDialog<{ password: string }>(unlockDBDialogConfig);
   const invalidPasswordDialog = useDialog(invalidPasswordDialogConfig);
 
   const [isDbLocked, setIsDbLocked] = useState(() => EncryptedDB.isLocked());
+  const [isLoading, setIsLoading] = useState(false);
   const user = useUserData();
 
   useEffect(() => {
     const interval = setInterval(() => {
       setIsDbLocked(EncryptedDB.isLocked());
-    }, intervalMs);
+    }, 1000);
 
     return () => clearInterval(interval);
-  }, [intervalMs]);
+  }, []);
 
   const handleLock = useStaticHandler(() => {
     EncryptedDB.lock();
     setIsDbLocked(true);
   });
 
-  const handleUnlock = useStaticHandler(async () => {
-    if (user?.uid) {
-      try {
-        await EncryptedDB.unlock(user?.uid, async () => {
-          return new Promise((resolve) => {
-            enterKeyDialog.open();
-            enterKeyDialog.on("unlock", ({ password }) => {
-              enterKeyDialog.off("unlock");
-              resolve(password);
+  const handleUnlock = useStaticHandler(
+    async (userId: string | undefined = user?.uid) => {
+      setIsLoading(true);
+      if (userId) {
+        try {
+          await EncryptedDB.unlock(userId, async () => {
+            return new Promise((resolve, reject) => {
+              enterKeyDialog.open();
+              enterKeyDialog.on("unlock", ({ password }) => {
+                enterKeyDialog.off("unlock");
+                resolve(password);
+              });
+              enterKeyDialog.on("cancel", () => {
+                enterKeyDialog.off("cancel");
+                reject("cancel");
+              });
             });
           });
-        });
-        setIsDbLocked(false);
-      } catch (error) {
-        const errorCode = (error as CodedError).code;
-        if (errorCode === errorCodes.INVALID_MASTER_PASSWORD) {
-          // TODO: Show error message to user and retry
-          invalidPasswordDialog.open();
-          invalidPasswordDialog.on("retry", () => {
-            handleUnlock();
-          });
+          setIsDbLocked(false);
+        } catch (error) {
+          const errorCode = (error as CodedError).code;
+          if (errorCode === errorCodes.INVALID_MASTER_PASSWORD) {
+            // TODO: Show error message to user and retry
+            invalidPasswordDialog.open();
+            invalidPasswordDialog.on("retry", () => {
+              handleUnlock();
+            });
+          }
         }
       }
-    }
-  });
+      setIsLoading(false);
+    },
+  );
 
   return useMemo(
-    () => ({ isDbLocked, lockDb: handleLock, unlockDb: handleUnlock }),
-    [isDbLocked, handleLock, handleUnlock],
+    () => ({
+      isDbLocked,
+      lockDb: handleLock,
+      unlockDb: handleUnlock,
+      isUnlocking: isLoading,
+    }),
+    [isDbLocked, handleLock, handleUnlock, isLoading],
   );
 }
 

@@ -34,7 +34,7 @@ import { useAuthLoading } from "../../hooks/useAuthLoading";
 
 const Layout = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const { isDbLocked, lockDb, unlockDb } = useDbLock();
+  const { isDbLocked, lockDb, unlockDb, isUnlocking } = useDbLock();
   const isAuthLoading = useAuthLoading();
   const navigate = useNavigate();
   const user = useUserData();
@@ -64,6 +64,8 @@ const Layout = () => {
                 color="inherit"
                 onClick={isDbLocked ? unlockDb : lockDb}
                 startIcon={!isDbLocked ? <LockOpenIcon /> : <LockIcon />}
+                loading={isUnlocking}
+                loadingPosition="start"
               >
                 {isDbLocked ? "Unlock DB" : "Lock DB"}
               </Button>
