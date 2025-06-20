@@ -87,7 +87,7 @@ export class EncryptedDB {
 
     const encryptedKey = sessionStorage.getItem("encryptedDBKey");
     if (!encryptedKey) {
-      console.log("Key not found");
+      // Key not found
       return;
     }
 
